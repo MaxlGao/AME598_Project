@@ -8,6 +8,7 @@ Connect a USB webcam to either a PC running Ubuntu or a Raspberry Pi
 - Run `pip3 install requests opencv-python numpy os platform`
 - Open Face_Detector_PC.py and change IP address on line 159. (Finish "Startup EC2" steps below first)
 - Run Face_Detector_PC.py and verify connection to server (Finish "Running the Server" steps below first)
+- To quit: make 'capture' the active window, then press `q` to quit
 
 ### For Webcam connected to Raspberry Pi
 
@@ -67,12 +68,12 @@ To fully shut down the server:
 
 Then
 
-`pkill -9 [NODE PROCESS ID]`
+`kill -9 [NODE PROCESS ID]`
 
 ## On a Browser
 
 Go to `http://[AWS-generated IP]:8080`
 
-If the connection is functioning properly, you should see something like this:
+If the connection is functioning properly, you should see something like this. The 'capture' window only shows up if you are running 'Face_Detector_PC.py' on the same PC.
 
 ![First Test Results](screenshot_1.png "First Test Results")
