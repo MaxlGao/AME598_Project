@@ -1,0 +1,37 @@
+<html>
+<head>
+<script src='asyncReq.js'></script>
+<script>
+function getDataFromServer() {
+    var url = "./getValue";
+    var callback = function(data){
+        console.log(data, typeof data);
+        var args = data.split(" ");
+        console.log(args);
+        var x = args[0];
+        var y = args[1];
+        var time = args[2];
+        var base64Image = args[3];
+
+        var output =
+        "<h2> Yaw Command </h2> <p>" + x + " &deg; F</p>"+
+        "<h2> Pitch Command </h2> <p>" + y + " %</p>"+
+        "<p> at " + new Date(parseInt(time)) + "</p>";
+
+        if (base64Image) {
+            output += "<img src='data:image/jpeg;base64," + base64Image + "' alt='Camera Image' />";
+        }
+
+        document.getElementById("data").innerHTML = output;
+    };
+
+    loadFile(url, callback);
+}
+</script>
+</head>
+
+<body style='text-align:center; font-family:Helvetica' onload='setInterval("getDataFromServer()", 1000)'>
+    <h1> Camera Outputs </h1>
+    <div id='data'></div>
+</body>
+</html>
