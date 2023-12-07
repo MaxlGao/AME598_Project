@@ -4,8 +4,6 @@ import base64
 import cv2
 import numpy as np
 import os
-import sys
-import platform
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO)
@@ -154,8 +152,7 @@ status = True
 def camera_status():
     global status
     status = True
-    cap_num = 0
-    cap = cv2.VideoCapture(cap_num)
+    cap = cv2.VideoCapture(0)
     
 def send_data_to_server(x, y, image=None):
     server_url = 'http://34.207.112.40:8080/setValue'
@@ -176,18 +173,13 @@ def runs():
     global status
     detect = Object_detect()
 
-    # open the camera
-    if platform.system() == "Windows":
-        cap_num = 1
-    elif platform.system() == "Linux":
-        cap_num = 0
-    cap = cv2.VideoCapture(cap_num)
+    cap = cv2.VideoCapture(0)
         
 
     try:
         while True:
             if not status:
-                cap = cv2.VideoCapture(cap_num)
+                cap = cv2.VideoCapture(0)
                 status = True
             ret, frame = cap.read()
 
