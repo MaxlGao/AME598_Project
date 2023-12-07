@@ -14,8 +14,8 @@ function getDataFromServer() {
         var base64Image = args[3];
 
         var output =
-        "<h2> Yaw Command </h2> <p>" + x + " &deg; F</p>"+
-        "<h2> Pitch Command </h2> <p>" + y + " %</p>"+
+        "<h2> Yaw Command </h2> <p> Turn " + x + ".</p>"+
+        "<h2> Pitch Command </h2> <p> Pitch " + y + ".</p>"+
         "<p> at " + new Date(parseInt(time)) + "</p>";
 
         if (base64Image) {

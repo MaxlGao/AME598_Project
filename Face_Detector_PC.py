@@ -156,7 +156,7 @@ def camera_status():
     cap = cv2.VideoCapture(cap_num)
     
 def send_data_to_server(x, y, image=None):
-    server_url = 'http://YOUR_SERVER_IP_ADDRESS/setValue'
+    server_url = 'http://34.207.112.40:8080/setValue'
     data = {'pitch': y, 'yaw': x}
 
     if image is not None:

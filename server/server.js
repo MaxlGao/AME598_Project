@@ -45,8 +45,8 @@ app.get("/getValue", function (req, res) {
 
 app.post("/setValue", function (req, res) {
   // Access data from the body of the request
-  VALUEx = req.body.x;
-  VALUEy = req.body.y;
+  VALUEx = req.body.yaw;
+  VALUEy = req.body.pitch;
   VALUEtime = new Date().getTime();
   VALUEimage = req.body.image;
 
