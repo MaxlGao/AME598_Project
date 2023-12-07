@@ -159,7 +159,16 @@ def send_data_to_server(x, y, image=None):
     data = {'pitch': y, 'yaw': x}
 
     if image is not None:
-        _, encoded_image = cv2.imencode('.jpg', image)
+        # Downscale the image to reduce size
+        scale_percent = 50  # percent of original size, change as needed
+        width = int(image.shape[1] * scale_percent / 100)
+        height = int(image.shape[0] * scale_percent / 100)
+        dim = (width, height)
+        resized_image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+
+        # Adjust JPEG quality for further compression
+        jpeg_quality = 70  # Adjust quality as needed (0-100, lower means more compression)
+        _, encoded_image = cv2.imencode('.jpg', resized_image, [int(cv2.IMWRITE_JPEG_QUALITY), jpeg_quality])
         image_base64 = base64.b64encode(encoded_image).decode('utf-8')
         data['image'] = image_base64
 

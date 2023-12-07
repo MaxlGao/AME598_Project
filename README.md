@@ -13,7 +13,7 @@ Connect a USB webcam to either a PC running Ubuntu or a Raspberry Pi
 ### For Webcam connected to Raspberry Pi
 - `git clone https://github.com/MaxlGao/AME598_Project.git`
 - `cd AME598_Project`
-- `pip3 install logging requests opencv-python numpy os platform`
+- `sudo apt install python3-opencv` and other libraries
 - `sudo nano Face_Detector_Pi.py`
 - Change IP address on line 159. (Finish "Startup EC2" steps below first)
 - Run Face_Detector_PC.py and verify connection to server (Finish "Running the Server" steps below first)
