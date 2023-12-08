@@ -1,121 +1,144 @@
-#define LILYGO_WATCH_2019_WITH_TOUCH
-#include <LilyGoWatch.h>
-TTGOClass *ttgo;
+//min and max servo angle for each servo
+//Servo  | Min | Max
+//pitch  | 0   | 180
+//yaw    | 0   | 180
 
-#include <SimpleDHT.h>
 
+//#include <Servo.h>
+#include <ESP32Servo.h>
+#include <math.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
 
-
-const char* ssid = "ds-2109";
-const char* password = "Kristicti";
-
+const char* ssid = "[SSID]";
+const char* password = "[PASSWORD]";
 //Your Domain name with URL path or IP address with path
-const char* serverName1 = "http://54.210.207.43:8080/setValue";
-const char* serverName2 = "http://107.21.26.55:8080/setValue";
+const char* serverUrl = "http://34.207.112.40:8080/getValue";
 
-// the following variables are unsigned longs because the time, measured in
-// milliseconds, will quickly become a bigger number than can be stored in an int.
-unsigned long lastTime = 0;
-unsigned long timerDelay = 300;
-unsigned long timestart = 0;
+// create servo object to control a servo
+Servo serY; //Yaw servo
+Servo serP; //Pitch servo
 
-String response1;
-String response2;
-int runtime = 0;
-// for DHT11,
-//      VCC: 5V or 3V
-//      GND: GND
-//      DATA: 21 or 25
-int pinDHT11 = 25;
-SimpleDHT11 dht11(pinDHT11);
+int Ys = 90;  // Current yaw position
+int Ps = 90;  // Current pitch position
+int servoStep = 10;  // Amount to move the servo on each command
 
-String httpGETRequest(const char* serverName) {
-  HTTPClient http;
-    
-  // Your IP address with path or Domain name with URL path 
-  http.begin(serverName);
-  http.setTimeout(2000);
+//Stores next desired positions of servo angle
+int nYs;
+int nPs;
 
-  // Send HTTP POST request
-  int httpResponseCode = http.GET();
-  String payload = "{}"; 
-  if (httpResponseCode>0) {
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode);
-    payload = http.getString();
-  }
-  else {
-    Serial.print("HTTP Error code: ");
-    Serial.println(httpResponseCode);
-  }
-  // Free resources
-  http.end();
-  return payload;
-}
+//Servo speed control
+int msec = 10; //Time (msec) between each degree of movement
+
+//set limits for servo angles
+//Yaw servo
+int limMinYs; //min limit
+int limMaxYs; //max limit
+
+//Pitch Servo
+int limMinPs; //min limit
+int limMaxPs; //max limit
+
+
 
 void setup() {
-  timestart = millis();
-  Serial.begin(115200);
-  ttgo = TTGOClass::getWatch();
-  ttgo->begin();
-  ttgo->openBL();
-  
-  ttgo->tft->fillScreen(TFT_BLACK);
-  ttgo->tft->setTextColor(TFT_WHITE, TFT_BLACK);
-  ttgo->tft->setTextFont(4);
+  Serial.begin(9600);
 
+  // Connect to WiFi
   WiFi.begin(ssid, password);
-  Serial.println("Connecting");
-  while(WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    Serial.println("Connecting to WiFi...");
   }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
-  Serial.println("Timer set to 5 seconds (timerDelay variable), it will take 5 seconds before publishing the first reading.");
+  Serial.println("Connected to WiFi");
+
+  // Attach servos to pins
+  serY.attach(27);  // Yaw servo pin
+  serP.attach(25);  // Pitch servo pin
+
+  // Initialize servo positions to defaults
+  serY.write(Ys);
+  delay(500);
+  serP.write(Ps);
+  delay(500);
 }
 
 void loop() {
-  if (millis() > timestart + 5000 - runtime) {
-    // start counting
-    int stopwatchStart = millis();
-    Serial.println("=================================");
-    Serial.println("Sample DHT11...");
-    // read without samples.
-    byte temperature = 0;
-    byte humidity = 0;
-    int err = SimpleDHTErrSuccess;
-    if ((err = dht11.read(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
-      Serial.print("Read DHT11 failed, err="); Serial.println(err); delay(1000);
-      return;
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverUrl);
+    int httpCode = http.GET();
+
+    if (httpCode > 0) {
+      String payload = http.getString();
+      Serial.println("Received: " + payload);
+
+      // Process yaw command
+      if (payload.indexOf("right") != -1) {
+        Serial.println("Turning Right");
+        Ys = min(Ys + servoStep, 180);
+        serY.write(Ys);
+        Serial.print("Yaw is ");
+        Serial.println(Ys);
+      } else if (payload.indexOf("left") != -1) {
+        Serial.println("Turning Left");
+        Ys = max(Ys - servoStep, 0);
+        serY.write(Ys);
+        Serial.print("Yaw is ");
+        Serial.println(Ys);
+      }
+
+      // Process pitch command
+      if (payload.indexOf("up") != -1) {
+        Serial.println("Pitching Up");
+        Ps = min(Ps + servoStep, 180);
+        serP.write(Ps);
+        Serial.print("Pitch is ");
+        Serial.println(Ps);
+      } else if (payload.indexOf("down") != -1) {
+        Serial.println("Pitching Down");
+        Ps = max(Ps - servoStep, 0);
+        serP.write(Ps);
+        Serial.print("Pitch is ");
+        Serial.println(Ps);
+      }
+    } else {
+      Serial.println("Error in HTTP request");
     }
-    Serial.print("Sample OK: ");
-    Serial.print(String((float)temperature) + "* C, ");
-    Serial.println(String((float)humidity) + "% H");
-  
-    ttgo->tft->drawString(String((int)temperature*1.8 + 32) + " *F",  5, 10);
-    ttgo->tft->drawString(String(humidity) + " % H",  5, 40);
-  
-    int t = (int)temperature;
-    int h = (int)humidity;
-    String attachment = String("?t=") + t + "&h=" + h + "&t=" + millis();
-    String url1 = String(serverName1) + attachment;
-    String url2 = String(serverName2) + attachment;
-    Serial.println(url1);
-    Serial.println("and");
-    Serial.println(url2);
-    Serial.println("with response: ");
-    response1 = httpGETRequest(url1.c_str());
-//    response2 = httpGETRequest(url2.c_str());
-    response2 = "None";
-    Serial.println(response1);
-    Serial.println("and");
-    Serial.println(response2);
-    timestart = millis();
-    runtime = millis() - stopwatchStart;
-    Serial.println("runtime" + String(runtime));
+    http.end();
   }
+  delay(1000); // Polling interval
+}
+
+//Function to move servo
+//parameters moveServo(servo name, min limit of that servo, max limit of that servo, desired servo angle, current servo angle )
+void moveServo(Servo serX, int limMinX, int limMaxX, int desPos, int curPos) {
+  //Display error messages if value is out of range
+  if (desPos > limMaxX || desPos < limMinX)
+  {
+    Serial.println("The value is out of range, try again.");
+  }
+  //moves servo if value is with in the range
+  else
+  {
+    Serial.print("writing servo Angle: ");
+    Serial.println(desPos);
+    Serial.println("start moving");
+    //while loops are used to control the speed of the servos.
+    //Delay time between each deg of movement can be adjusted at the top
+    while ( desPos < curPos) { //decreases angle
+      --curPos;
+      serX.write(curPos);
+      delay(msec);
+      //Serial.println(curPos);
+    }
+    while ( desPos > curPos) { //increases angle
+      ++curPos;
+      serX.write(curPos);
+      delay(msec);
+      //Serial.println(curPos);
+    }
+    Serial.println("done moving");
+  }
+  Serial.println();
 }
